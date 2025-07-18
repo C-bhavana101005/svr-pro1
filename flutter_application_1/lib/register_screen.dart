@@ -12,14 +12,35 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController employeeIdController = TextEditingController();
   final TextEditingController nameController = TextEditingController();
-  final TextEditingController designationController = TextEditingController();
-  final TextEditingController departmentController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController mobileController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
 
   String? gender;
   Uint8List? selectedImage;
+
+  String? selectedDesignation;
+  String? selectedDepartment;
+
+  final List<String> designationOptions = [
+    'Principal',
+    'HOD',
+    'Dean',
+    'Professor',
+    'Associate Professor',
+    'Assistant Professor',
+    'Non-Teaching Staff',
+  ];
+
+  final List<String> departmentOptions = [
+    'CSE',
+    'ECE',
+    'EEE',
+    'MECH',
+    'CIVIL',
+    'IT',
+    'H&S',
+  ];
 
   Future<void> pickImage() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -40,7 +61,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   void handleSubmit() {
-    // This is just a placeholder. In pre-Django version, this does nothing.
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Submitted (local only, no backend)")),
     );
@@ -57,8 +77,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             _buildTextField("Employee ID", employeeIdController),
             _buildTextField("Name", nameController),
             _buildGenderSelector(),
-            _buildTextField("Designation", designationController),
-            _buildTextField("Department", departmentController),
+            _buildDropdown("Designation", designationOptions, selectedDesignation,
+                (value) => setState(() => selectedDesignation = value)),
+            _buildDropdown("Department", departmentOptions, selectedDepartment,
+                (value) => setState(() => selectedDepartment = value)),
             _buildTextField("Email", emailController),
             _buildTextField("Mobile", mobileController),
             _buildTextField("Address", addressController),
@@ -88,23 +110,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  Widget _buildDropdown(
+      String label, List<String> items, String? selected, ValueChanged<String?> onChanged) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: DropdownButtonFormField<String>(
+        value: selected,
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+        ),
+        items: items.map((item) {
+          return DropdownMenuItem<String>(
+            value: item,
+            child: Text(item),
+          );
+        }).toList(),
+        onChanged: onChanged,
+      ),
+    );
+  }
+
   Widget _buildGenderSelector() {
-    return Row(
-      children: [
-        const Text("Gender: "),
-        Radio<String>(
-          value: 'Male',
-          groupValue: gender,
-          onChanged: (value) => setState(() => gender = value),
-        ),
-        const Text("Male"),
-        Radio<String>(
-          value: 'Female',
-          groupValue: gender,
-          onChanged: (value) => setState(() => gender = value),
-        ),
-        const Text("Female"),
-      ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          const Text("Gender: "),
+          Radio<String>(
+            value: 'Male',
+            groupValue: gender,
+            onChanged: (value) => setState(() => gender = value),
+          ),
+          const Text("Male"),
+          Radio<String>(
+            value: 'Female',
+            groupValue: gender,
+            onChanged: (value) => setState(() => gender = value),
+          ),
+          const Text("Female"),
+        ],
+      ),
     );
   }
 

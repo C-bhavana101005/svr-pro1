@@ -43,6 +43,14 @@ class _SuperAdmin1State extends State<SuperAdmin1> {
 
   int _selectedIndex = 0;
 
+  void _onMenuSelected(String value) {
+    if (value == 'staff') {
+      Navigator.pushNamed(context, '/staff');
+    } else if (value == 'register') {
+      Navigator.pushNamed(context, '/register');
+    }
+  }
+
   Widget buildSearchBar() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
@@ -219,6 +227,20 @@ class _SuperAdmin1State extends State<SuperAdmin1> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
+      appBar: AppBar(
+        automaticallyImplyLeading: false, // Removes back arrow
+        title: const Text('Super Admin'),
+        backgroundColor: const Color(0xFF6A85B6),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: _onMenuSelected,
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'staff', child: Text('Staff')),
+              const PopupMenuItem(value: 'register', child: Text('Register')),
+            ],
+          ),
+        ],
+      ),
       body: SafeArea(child: buildStaffList()),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
