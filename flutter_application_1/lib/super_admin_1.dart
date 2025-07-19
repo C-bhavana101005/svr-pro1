@@ -8,7 +8,7 @@ class SuperAdmin1 extends StatefulWidget {
 }
 
 class _SuperAdmin1State extends State<SuperAdmin1> {
-  final List<Map<String, String>> staffList = [
+  final List<Map<String, String>> originalStaffList = [
     {
       'name': 'Person-1',
       'image': 'https://i.imgur.com/BoN9kdC.png',
@@ -41,7 +41,16 @@ class _SuperAdmin1State extends State<SuperAdmin1> {
     },
   ];
 
+  List<Map<String, String>> filteredList = [];
+
   int _selectedIndex = 0;
+  final TextEditingController searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    filteredList = List.from(originalStaffList);
+  }
 
   void _onMenuSelected(String value) {
     if (value == 'staff') {
@@ -51,10 +60,62 @@ class _SuperAdmin1State extends State<SuperAdmin1> {
     }
   }
 
+  void _onItemTapped(int index) {
+    setState(() => _selectedIndex = index);
+    if (index == 1) {
+      Navigator.pushNamed(context, '/super_admin_2');
+    } else if (index == 2) {
+      Navigator.pushNamed(context, '/super_admin_account');
+    }
+  }
+
+  void showImageDialog(String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.all(10),
+          child: Stack(
+            children: [
+              Center(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.network(imageUrl, fit: BoxFit.contain),
+                ),
+              ),
+              Positioned(
+                top: 10,
+                right: 10,
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void filterStaffList(String query) {
+    final results = originalStaffList.where((staff) {
+      final name = staff['name']!.toLowerCase();
+      return name.contains(query.toLowerCase());
+    }).toList();
+
+    setState(() {
+      filteredList = results;
+    });
+  }
+
   Widget buildSearchBar() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
       child: TextField(
+        controller: searchController,
+        onChanged: filterStaffList,
         decoration: InputDecoration(
           prefixIcon: const Icon(Icons.search, color: Colors.grey),
           hintText: 'Search...',
@@ -79,27 +140,21 @@ class _SuperAdmin1State extends State<SuperAdmin1> {
         children: const [
           Expanded(
             flex: 3,
-            child: Text(
-              'Person Name',
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+            child: Text('Person Name',
+                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+          ),
+          Expanded(
+            flex: 2,
+            child: Center(
+              child: Text('Out Time',
+                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
             ),
           ),
           Expanded(
             flex: 2,
             child: Center(
-              child: Text(
-                'Out Time',
-                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Center(
-              child: Text(
-                'In Time',
-                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
-              ),
+              child: Text('In Time',
+                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
             ),
           ),
         ],
@@ -114,22 +169,19 @@ class _SuperAdmin1State extends State<SuperAdmin1> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 4,
-            offset: Offset(2, 3),
-          ),
-        ],
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(2, 3))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              CircleAvatar(
-                backgroundImage: NetworkImage(staff['image']!),
-                radius: 25,
+              GestureDetector(
+                onTap: () => showImageDialog(staff['image']!),
+                child: CircleAvatar(
+                  backgroundImage: NetworkImage(staff['image']!),
+                  radius: 25,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -142,19 +194,13 @@ class _SuperAdmin1State extends State<SuperAdmin1> {
               Expanded(
                 flex: 2,
                 child: Center(
-                  child: Text(
-                    staff['outTime']!,
-                    style: const TextStyle(fontSize: 14),
-                  ),
+                  child: Text(staff['outTime']!, style: const TextStyle(fontSize: 14)),
                 ),
               ),
               Expanded(
                 flex: 2,
                 child: Center(
-                  child: Text(
-                    staff['inTime']!,
-                    style: const TextStyle(fontSize: 14),
-                  ),
+                  child: Text(staff['inTime']!, style: const TextStyle(fontSize: 14)),
                 ),
               ),
             ],
@@ -172,9 +218,7 @@ class _SuperAdmin1State extends State<SuperAdmin1> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 child: const Text('Accept'),
               ),
@@ -188,9 +232,7 @@ class _SuperAdmin1State extends State<SuperAdmin1> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 child: const Text('Decline'),
               ),
@@ -206,21 +248,23 @@ class _SuperAdmin1State extends State<SuperAdmin1> {
       children: [
         const SizedBox(height: 10),
         buildSearchBar(),
-        buildHeaderRow(),
-        const Divider(thickness: 1, color: Colors.grey),
-        ...staffList.map((staff) => buildStaffCard(staff)).toList(),
+        if (filteredList.isNotEmpty) ...[
+          buildHeaderRow(),
+          const Divider(thickness: 1, color: Colors.grey),
+          ...filteredList.map((staff) => buildStaffCard(staff)).toList(),
+        ] else
+          Padding(
+            padding: const EdgeInsets.only(top: 80.0),
+            child: Center(
+              child: Text(
+                'Results not found',
+                style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+              ),
+            ),
+          ),
         const SizedBox(height: 20),
       ],
     );
-  }
-
-  void _onItemTapped(int index) {
-    setState(() => _selectedIndex = index);
-    if (index == 1) {
-      Navigator.pushNamed(context, '/super_admin_2');
-    } else if (index == 2) {
-      Navigator.pushNamed(context, '/super_admin_account');
-    }
   }
 
   @override
@@ -228,7 +272,7 @@ class _SuperAdmin1State extends State<SuperAdmin1> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        automaticallyImplyLeading: false, // Removes back arrow
+        automaticallyImplyLeading: false,
         title: const Text('Super Admin'),
         backgroundColor: const Color(0xFF6A85B6),
         actions: [

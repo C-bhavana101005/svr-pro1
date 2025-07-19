@@ -1,4 +1,7 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart'; // ✅ For kIsWeb
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class StaffScreen extends StatefulWidget {
   const StaffScreen({super.key});
@@ -8,35 +11,61 @@ class StaffScreen extends StatefulWidget {
 }
 
 class _StaffScreenState extends State<StaffScreen> {
-  List<Map<String, String>> staffList = [
-    {
-      'id': 'E101',
-      'name': 'Alice',
-      'designation': 'Professor',
-      'department': 'CSE',
-    },
-    {
-      'id': 'E102',
-      'name': 'Bob',
-      'designation': 'Assistant Professor',
-      'department': 'ECE',
-    },
-  ];
+  List<dynamic> staffList = [];
+  List<dynamic> recentlyDeleted = [];
 
-  List<Map<String, String>> recentlyDeleted = [];
+  // ✅ Web-safe base URL detection
+  final String baseHost = kIsWeb ? '127.0.0.1' : '10.0.2.2'; // Use local IP if needed
+  late final String baseUrl;
 
-  void deleteStaff(int index) {
-    setState(() {
-      recentlyDeleted.add(staffList[index]);
-      staffList.removeAt(index);
-    });
+  @override
+  void initState() {
+    super.initState();
+    baseUrl = 'http://$baseHost:8000/api';
+    fetchStaff();
+    fetchDeletedStaff();
   }
 
-  void restoreStaff(int index) {
-    setState(() {
-      staffList.add(recentlyDeleted[index]);
-      recentlyDeleted.removeAt(index);
-    });
+  Future<void> fetchStaff() async {
+    final response = await http.get(Uri.parse('$baseUrl/profiles/'));
+    if (response.statusCode == 200) {
+      setState(() {
+        staffList = json.decode(response.body);
+      });
+    } else {
+      print('Failed to load staff: ${response.statusCode}');
+    }
+  }
+
+  Future<void> fetchDeletedStaff() async {
+    final response = await http.get(Uri.parse('$baseUrl/profiles/deleted/'));
+    if (response.statusCode == 200) {
+      setState(() {
+        recentlyDeleted = json.decode(response.body);
+      });
+    } else {
+      print('Failed to load deleted staff: ${response.statusCode}');
+    }
+  }
+
+  Future<void> deleteStaff(int id) async {
+    final response = await http.delete(Uri.parse('$baseUrl/profiles/$id/'));
+    if (response.statusCode == 204) {
+      fetchStaff();
+      fetchDeletedStaff();
+    } else {
+      print('Delete failed: ${response.statusCode}');
+    }
+  }
+
+  Future<void> restoreStaff(int id) async {
+    final response = await http.post(Uri.parse('$baseUrl/profiles/$id/restore/'));
+    if (response.statusCode == 200) {
+      fetchStaff();
+      fetchDeletedStaff();
+    } else {
+      print('Restore failed: ${response.statusCode}');
+    }
   }
 
   @override
@@ -46,10 +75,12 @@ class _StaffScreenState extends State<StaffScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text("Staff List"),
-          bottom: const TabBar(tabs: [
-            Tab(text: 'Active Staff'),
-            Tab(text: 'Recently Deleted'),
-          ]),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'Active Staff'),
+              Tab(text: 'Recently Deleted'),
+            ],
+          ),
         ),
         body: TabBarView(
           children: [
@@ -66,23 +97,42 @@ class _StaffScreenState extends State<StaffScreen> {
       itemCount: staffList.length,
       itemBuilder: (context, index) {
         final staff = staffList[index];
-        return ListTile(
-          title: Text('${staff['name']} (${staff['id']})'),
-          subtitle: Text('${staff['designation']} - ${staff['department']}'),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.edit, color: Colors.blue),
-                onPressed: () {
-                  // Navigate to UpdateScreen (not connected to backend)
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete, color: Colors.red),
-                onPressed: () => deleteStaff(index),
-              ),
-            ],
+        return Card(
+          margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          child: ListTile(
+            leading: staff['image'] != null
+                ? CircleAvatar(
+                    radius: 25,
+                    backgroundImage:
+                        NetworkImage('http://$baseHost:8000${staff['image']}'),
+                  )
+                : const CircleAvatar(child: Icon(Icons.person)),
+            title: Text('${staff['name']} (${staff['employee_id']})'),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('${staff['designation']} - ${staff['department']}'),
+                Text('Email: ${staff['email']}'),
+                Text('Mobile: ${staff['mobile']}'),
+                Text('Address: ${staff['address']}'),
+              ],
+            ),
+            isThreeLine: true,
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit, color: Colors.blue),
+                  onPressed: () {
+                    // TODO: Navigate to UpdateScreen
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () => deleteStaff(staff['id']),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -94,12 +144,31 @@ class _StaffScreenState extends State<StaffScreen> {
       itemCount: recentlyDeleted.length,
       itemBuilder: (context, index) {
         final staff = recentlyDeleted[index];
-        return ListTile(
-          title: Text('${staff['name']} (${staff['id']})'),
-          subtitle: Text('${staff['designation']} - ${staff['department']}'),
-          trailing: IconButton(
-            icon: const Icon(Icons.restore, color: Colors.green),
-            onPressed: () => restoreStaff(index),
+        return Card(
+          margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          child: ListTile(
+            leading: staff['image'] != null
+                ? CircleAvatar(
+                    radius: 25,
+                    backgroundImage:
+                        NetworkImage('http://$baseHost:8000${staff['image']}'),
+                  )
+                : const CircleAvatar(child: Icon(Icons.person)),
+            title: Text('${staff['name']} (${staff['employee_id']})'),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('${staff['designation']} - ${staff['department']}'),
+                Text('Email: ${staff['email']}'),
+                Text('Mobile: ${staff['mobile']}'),
+                Text('Address: ${staff['address']}'),
+              ],
+            ),
+            isThreeLine: true,
+            trailing: IconButton(
+              icon: const Icon(Icons.restore, color: Colors.green),
+              onPressed: () => restoreStaff(staff['id']),
+            ),
           ),
         );
       },

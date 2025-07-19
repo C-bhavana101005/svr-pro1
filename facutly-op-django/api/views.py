@@ -7,6 +7,18 @@ from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from django.contrib.auth.models import User
 from rest_framework import generics
+from django.http import JsonResponse
+
+@api_view(['GET'])
+def check_mobile_unique(request):
+    mobile = request.GET.get('mobile')
+    exists = Profile.objects.filter(mobile=mobile).exists()
+    return JsonResponse({'is_unique': not exists})
+
+def check_employee_id(request):
+    emp_id = request.GET.get('employee_id', '')
+    exists = Profile.objects.filter(employee_id=emp_id).exists()
+    return JsonResponse({'exists': exists})
 
 class ProfileViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.filter(is_deleted=False)
