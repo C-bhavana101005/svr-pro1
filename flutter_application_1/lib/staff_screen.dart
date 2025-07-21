@@ -1,7 +1,9 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart'; // ✅ For kIsWeb
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+
+import 'update_staff_screen.dart';
 
 class StaffScreen extends StatefulWidget {
   const StaffScreen({super.key});
@@ -14,8 +16,7 @@ class _StaffScreenState extends State<StaffScreen> {
   List<dynamic> staffList = [];
   List<dynamic> recentlyDeleted = [];
 
-  // ✅ Web-safe base URL detection
-  final String baseHost = kIsWeb ? '127.0.0.1' : '10.0.2.2'; // Use local IP if needed
+  final String baseHost = kIsWeb ? '127.0.0.1' : '10.0.2.2';
   late final String baseUrl;
 
   @override
@@ -103,8 +104,7 @@ class _StaffScreenState extends State<StaffScreen> {
             leading: staff['image'] != null
                 ? CircleAvatar(
                     radius: 25,
-                    backgroundImage:
-                        NetworkImage('http://$baseHost:8000${staff['image']}'),
+                    backgroundImage: NetworkImage('http://$baseHost:8000${staff['image']}'),
                   )
                 : const CircleAvatar(child: Icon(Icons.person)),
             title: Text('${staff['name']} (${staff['employee_id']})'),
@@ -124,7 +124,18 @@ class _StaffScreenState extends State<StaffScreen> {
                 IconButton(
                   icon: const Icon(Icons.edit, color: Colors.blue),
                   onPressed: () {
-                    // TODO: Navigate to UpdateScreen
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => UpdateStaffScreen(
+                          staffMember: Map<String, String>.from(
+                            staff.map((key, value) => MapEntry(key.toString(), value.toString())),
+                          ),
+                          baseUrl: baseUrl,
+                          onUpdate: fetchStaff,
+                        ),
+                      ),
+                    );
                   },
                 ),
                 IconButton(
@@ -150,8 +161,7 @@ class _StaffScreenState extends State<StaffScreen> {
             leading: staff['image'] != null
                 ? CircleAvatar(
                     radius: 25,
-                    backgroundImage:
-                        NetworkImage('http://$baseHost:8000${staff['image']}'),
+                    backgroundImage: NetworkImage('http://$baseHost:8000${staff['image']}'),
                   )
                 : const CircleAvatar(child: Icon(Icons.person)),
             title: Text('${staff['name']} (${staff['employee_id']})'),

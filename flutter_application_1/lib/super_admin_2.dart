@@ -68,7 +68,7 @@ class _SuperAdmin2State extends State<SuperAdmin2> {
       child: Container(
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFFB5B8FF), Color(0xFFD9D9FF)],
+            colors: [Color(0xFF6A85B6), Color.fromARGB(255, 177, 204, 255)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -144,13 +144,13 @@ class _SuperAdmin2State extends State<SuperAdmin2> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        backgroundColor: const Color.fromARGB(255, 200, 200, 255),
-        selectedItemColor: Colors.black,
-        unselectedItemColor: Colors.black45,
+        backgroundColor: const Color.fromARGB(255, 106, 133, 182),
+        selectedItemColor: const Color.fromARGB(255, 255, 255, 255),
+        unselectedItemColor: const Color.fromARGB(115, 255, 255, 255),
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'home'),
-          BottomNavigationBarItem(icon: Icon(Icons.insert_drive_file), label: 'reports'),
-          BottomNavigationBarItem(icon: Icon(Icons.account_circle), label: 'account'),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.insert_chart), label: 'Reports'),
+          BottomNavigationBarItem(icon: Icon(Icons.account_circle), label: 'Account'),
         ],
       ),
     );
