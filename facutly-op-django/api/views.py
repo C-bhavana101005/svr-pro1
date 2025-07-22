@@ -9,6 +9,15 @@ from django.contrib.auth.models import User
 from rest_framework import generics
 from django.http import JsonResponse
 
+@api_view(['DELETE'])
+def permanently_delete_profile(request, pk):
+    try:
+        profile = Profile.objects.get(pk=pk)
+        profile.delete()  # Fully delete from DB
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    except Profile.DoesNotExist:
+        return Response({'error': 'Profile not found'}, status=status.HTTP_404_NOT_FOUND)
+
 @api_view(['GET'])
 def check_mobile_unique(request):
     mobile = request.GET.get('mobile')

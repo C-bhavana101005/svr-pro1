@@ -12,6 +12,8 @@ urlpatterns = [
     path('profiles/<int:pk>/', ProfileDetailView.as_view(), name='profile-detail'),  # <- update
     path('check_mobile/', views.check_mobile_unique),
     path('check_employee_id/', views.check_employee_id),
+    path('api/profiles/<int:pk>/permanent_delete/', views.permanently_delete_profile),
+
 ]
 
 urlpatterns += router.urls
